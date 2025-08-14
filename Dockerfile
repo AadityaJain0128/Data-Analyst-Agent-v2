@@ -1,35 +1,31 @@
-# Use Python 3.12 slim image as base
+# Dockerfile
+
+# Use the official Python 3.12 slim image as a base
 FROM python:3.12-slim
 
-# Set working directory
+# Set the working directory inside the container
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    gcc \
-    g++ \
-    python3-dev \
-    && rm -rf /var/lib/apt/lists/*
+# [Optional but good practice] Install build tools needed for some Python packages,
+# then clean up apt cache to keep the image small.
+RUN apt-get update && apt-get install -y --no-install-recommends gcc && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements file
+# Copy the requirements file into the container
 COPY requirements.txt .
 
-# Install Python dependencies
+# Install Python dependencies from requirements.txt
+# --no-cache-dir reduces image size
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application files
-COPY app.py .
-COPY index.html .
-COPY entrypoint.sh .
+# Copy your application code into the container
+COPY app.py index.html entrypoint.sh ./
 
-# Copy environment file if it exists
-COPY .env* ./
-
-# Make entrypoint script executable
+# Make the entrypoint script executable
 RUN chmod +x entrypoint.sh
 
-# Expose the port the app runs on
+# Expose the port that the application will run on
+# This is documentation; the actual port is set by Railway's $PORT variable
 EXPOSE 8000
 
-# Command to run the application
+# Set the command to run the application using the entrypoint script
 CMD ["./entrypoint.sh"]
